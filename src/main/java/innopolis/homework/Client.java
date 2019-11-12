@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class Client {
-    public static final int PORT = 8080;
+    public static final int PORT = 8081;
     public static void main(String[] args) throws IOException {
 
         while (true) {
@@ -14,7 +14,7 @@ public class Client {
             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 
             System.out.println("Вы что-то хотели сказать? Введите это здесь:");
-            String word = reader.readLine();
+            String word = "qq";//reader.readLine();
 //            out.write(word + "\n");
             out.write("POST qq");
             out.flush();

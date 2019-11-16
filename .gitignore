@@ -1,3 +1,7 @@
 # Project exclude paths
 /target/
 .idea
+/hs_err_pid412564.log
+/src/test/java/innopolis/homework/AppTest.java
+/src/main/java/innopolis/homework/App.java
+.gitignore

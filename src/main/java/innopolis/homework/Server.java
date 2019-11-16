@@ -3,53 +3,15 @@ package innopolis.homework;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 public class Server {
     static int activeConnections = 0;
     private static int count = 0;
-    public static class NewClient implements Runnable{
-        ServerSocket serverSocket = null;
-        Thread thread;
-        public NewClient(ServerSocket serverSocket, String name) {
-            this.serverSocket = serverSocket;
-            thread = new Thread(this, name);
-            thread.start();
-        }
 
-        @Override
-        public void run() {
-            try( Socket clientSocket = serverSocket.accept() ) {
-
-                count++;
-                System.out.println("Client" + count + " has connected!");
-                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
-
-                output.println("HTTP/1.1 200 OK");
-                output.println("Content-Type: text/html; charset=utf-8");
-                output.println();
-
-                if (in.ready()) {
-                    activeConnections++;
-                    String word = in.readLine();
-                    doWithClient(word, output);
-                    output.println("There is " + activeConnections + " active connections");
-                    output.println("You will be disconnect in 50 seconds");
-                    thread.sleep(50000);
-                    System.out.println("Client" + count + " has disconnected!");
-                    System.out.println("Thank you for connecting to " + serverSocket.getLocalSocketAddress() + "\nGoodbye!");
-                    activeConnections--;
-                } else {
-                    System.out.println("*************\nThere is no request from the client\n*************");
-                }
-            } catch (IOException | InterruptedException e) {
-                activeConnections--;
-                e.printStackTrace();
-            }
-        }
-    }
-    public static void doWithClient(String word, PrintWriter output){
+    public static void doWithClient(String word, PrintWriter output) {
         File folder = new File(".\\");
         File[] listOfFiles = folder.listFiles();
         List<File> filesDirs = Arrays.asList(listOfFiles);
@@ -57,7 +19,8 @@ public class Server {
         if ((word.length() > 3) && word.substring(0, 3).equals("GET")) {
             output.println("\nPaths and files in current dir\n<br>");
             while (filesIter.hasNext()) {
-                output.println(filesIter.next() + "<br>");
+                String dir1 = filesIter.next().toString();
+                output.println(dir1 + "<br>\n");
                 output.println();
             }
         } else {
@@ -76,11 +39,58 @@ public class Server {
                     e.printStackTrace();
                 }
                 while (true) {
-                    NewClient client = new NewClient(serverSocket, "client"+count);
+                    try {
+                        Socket clientSocket = serverSocket.accept();
+                        NewClient client = new NewClient(clientSocket, "client" + count);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
         Thread serv = new Thread(runServ);
         serv.start();
+    }
+
+    public static class NewClient implements Runnable {
+        Socket clientSocket = null;
+        Thread thread;
+
+        public NewClient(Socket socket, String name) {
+            this.clientSocket = socket;
+            thread = new Thread(this, name);
+            thread.start();
+        }
+
+        @Override
+        public void run() {
+            try {
+                count++;
+                System.out.println("Client" + count + " has connected!");
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                PrintWriter output = new PrintWriter(clientSocket.getOutputStream(), true);
+
+                output.println("HTTP/1.1 200 OK");
+                output.println("Content-Type: text/html; charset=utf-8");
+                output.println();
+
+                if (in.ready()) {
+                    activeConnections++;
+                    String word = in.readLine();
+                    doWithClient(word, output);
+                    output.println("There is " + activeConnections + " active connections");
+                    output.println("You will be disconnect in 50 seconds");
+                    thread.sleep(15000);
+                    System.out.println("Client" + count + " has disconnected!");
+                    System.out.println("Thank you for connecting to " + clientSocket.getLocalSocketAddress() + "\nGoodbye!");
+                    activeConnections--;
+                } else {
+                    System.out.println("*************\nThere is no request from the client\n*************");
+                }
+            } catch (IOException | InterruptedException e) {
+                activeConnections--;
+                e.printStackTrace();
+            }
+        }
     }
 }
